@@ -180,59 +180,59 @@ export default async function PostPage({ params }: PageProps) {
         <header className="mb-8">
           <h1 className="sr-only">{post.title}</h1>
           <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-          {date && <span>{date}</span>}
-          {authorName && (
-            <>
-              <span aria-hidden>·</span>
-              <span>by {authorName}</span>
-            </>
-          )}
-        </div>
-        {tags.length > 0 && (
-          <div className="mt-3 flex flex-wrap gap-2">
-            {tags.map((tag) => (
-              <TagBadge key={tag.id} tag={tag} />
-            ))}
+            {date && <span>{date}</span>}
+            {authorName && (
+              <>
+                <span aria-hidden>·</span>
+                <span>by {authorName}</span>
+              </>
+            )}
           </div>
-        )}
-      </header>
-
-      <TableOfContents headings={headings} />
-
-      {post.content && (
-        <div className="prose prose-invert prose-sm max-w-none sm:prose-base">
-          <RichText
-            data={post.content as unknown as Parameters<typeof RichText>[0]['data']}
-            converters={richTextConverters}
-          />
-        </div>
-      )}
-
-      {(category || tags.length > 0) && (
-        <footer className="mt-12 border-t border-border pt-6 text-sm text-muted-foreground">
-          {category && (
-            <p>
-              Filed under:{' '}
-              <a
-                href={`/blog/category/${category.slug}`}
-                className="transition-colors hover:text-foreground"
-              >
-                {category.name}
-              </a>
-            </p>
-          )}
           {tags.length > 0 && (
-            <div className="mt-2 flex flex-wrap items-center gap-2">
-              <span>Tags:</span>
+            <div className="mt-3 flex flex-wrap gap-2">
               {tags.map((tag) => (
                 <TagBadge key={tag.id} tag={tag} />
               ))}
             </div>
           )}
-        </footer>
-      )}
+        </header>
 
-      <PostNavigation prev={prevPost} next={nextPost} />
+        <TableOfContents headings={headings} />
+
+        {post.content && (
+          <div className="prose prose-invert prose-sm max-w-none sm:prose-base">
+            <RichText
+              data={post.content as unknown as Parameters<typeof RichText>[0]['data']}
+              converters={richTextConverters}
+            />
+          </div>
+        )}
+
+        {(category || tags.length > 0) && (
+          <footer className="mt-12 border-t border-border pt-6 text-sm text-muted-foreground">
+            {category && (
+              <p>
+                Filed under:{' '}
+                <a
+                  href={`/blog/category/${category.slug}`}
+                  className="transition-colors hover:text-foreground"
+                >
+                  {category.name}
+                </a>
+              </p>
+            )}
+            {tags.length > 0 && (
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                <span>Tags:</span>
+                {tags.map((tag) => (
+                  <TagBadge key={tag.id} tag={tag} />
+                ))}
+              </div>
+            )}
+          </footer>
+        )}
+
+        <PostNavigation prev={prevPost} next={nextPost} />
       </div>
     </>
   )

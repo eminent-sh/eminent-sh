@@ -17,14 +17,12 @@ export const revalidate = 86400
 export default async function CategoriesIndexPage() {
   const payload = await getPayload({ config })
 
-  const [categoriesResult] = await Promise.all([
-    payload.find({
-      collection: 'categories',
-      sort: 'name',
-      limit: 100,
-      depth: 0,
-    }),
-  ])
+  const categoriesResult = await payload.find({
+    collection: 'categories',
+    sort: 'name',
+    limit: 100,
+    depth: 0,
+  })
 
   const categories = categoriesResult.docs
 

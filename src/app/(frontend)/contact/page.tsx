@@ -1,20 +1,15 @@
-import { headers as getHeaders } from 'next/headers.js'
 import Link from 'next/link'
-import { getPayload } from 'payload'
 import React from 'react'
 
 import { Hero } from '@/components/Hero'
-import config from '@/payload.config'
 
-export const dynamic = 'force-dynamic'
-export const revalidate = 86400
+export const metadata = {
+  title: 'Contact | EMINENT',
+  description:
+    "Need a technical consultation or have a project in mind? Get in touch and let's discuss how we can help bring your vision to life.",
+}
 
 export default async function ContactPage() {
-  const headers = await getHeaders()
-  const payloadConfig = await config
-  const payload = await getPayload({ config: payloadConfig })
-  await payload.auth({ headers })
-
   return (
     <>
       <Hero

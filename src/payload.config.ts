@@ -73,7 +73,7 @@ export default buildConfig({
       uploadsCollection: 'media',
       tabbedUI: true,
       generateTitle: ({ doc }) =>
-        doc?.title ? `${String(doc.title)} | Your Site` : 'Your Site',
+        doc?.title ? `${String(doc.title)} | EMINENT` : 'EMINENT',
       generateDescription: ({ doc }) =>
         (doc as { excerpt?: string })?.excerpt ?? undefined,
       generateURL: ({ doc, collectionSlug }) => {
