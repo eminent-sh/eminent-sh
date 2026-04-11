@@ -7,9 +7,14 @@ import { fileURLToPath } from 'url'
 import { CloudflareContext, getCloudflareContext } from '@opennextjs/cloudflare'
 import { GetPlatformProxyOptions } from 'wrangler'
 import { r2Storage } from '@payloadcms/storage-r2'
+import { seoPlugin } from '@payloadcms/plugin-seo'
 
 import { Users } from './collections/Users'
 import { Media } from './collections/Media'
+import { Posts } from './collections/Posts'
+import { Categories } from './collections/Categories'
+import { Tags } from './collections/Tags'
+import { Projects } from './collections/Projects'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -50,7 +55,7 @@ export default buildConfig({
       baseDir: path.resolve(dirname),
     },
   },
-  collections: [Users, Media],
+  collections: [Users, Media, Posts, Projects, Categories, Tags],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',
   typescript: {
@@ -62,6 +67,35 @@ export default buildConfig({
     r2Storage({
       bucket: cloudflare.env.R2,
       collections: { media: true },
+    }),
+    seoPlugin({
+      collections: ['posts'],
+      uploadsCollection: 'media',
+      tabbedUI: true,
+      generateTitle: ({ doc }) =>
+        doc?.title ? `${String(doc.title)} | Your Site` : 'Your Site',
+      generateDescription: ({ doc }) =>
+        (doc as { excerpt?: string })?.excerpt ?? undefined,
+      generateURL: ({ doc, collectionSlug }) => {
+        const base = process.env.SITE_URL || process.env.NEXT_PUBLIC_SITE_URL || 'https://example.com'
+        if (String(collectionSlug) === 'posts' && (doc as { slug?: string })?.slug) {
+          return `${base}/blog/${(doc as { slug: string }).slug}`
+        }
+        return base
+      },
+      generateImage: ({ doc }) => {
+        const img = (doc as { featuredImage?: number | { id: number } })?.featuredImage
+        return img as string | number | { id: string | number } | undefined
+      },
+      fields: ({ defaultFields }) => [
+        ...defaultFields,
+        {
+          name: 'keywords',
+          type: 'text',
+          label: 'Meta Keywords',
+          admin: { description: 'Comma-separated keywords for meta keywords.' },
+        },
+      ],
     }),
   ],
 })
