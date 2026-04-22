@@ -1,6 +1,95 @@
+# AGENTS.md
+
+This file provides guidance to AI coding agents (Claude Code, Cursor, Codex, Gemini CLI, GitHub Copilot, Windsurf, and others) when working with code in this repository.
+
+## Project Overview
+This project is a modern, high-performance web application built with **Payload CMS 3.0** and **Next.js 15**, specifically optimized for deployment on the **Cloudflare** platform. It utilizes Cloudflare D1 for SQLite database storage and Cloudflare R2 for media/file storage, managed via OpenNext for seamless integration.
+
+## Tech Stack
+- **Framework**: Next.js 15 (App Router)
+- **CMS**: Payload CMS 3.0
+- **Database**: Cloudflare D1 (SQLite) via `@payloadcms/db-d1-sqlite`
+- **Storage**: Cloudflare R2 via `@payloadcms/storage-r2`
+- **Deployment**: Cloudflare Pages / Workers via `@opennextjs/cloudflare`
+- **Styling**: Tailwind CSS 4, Radix UI
+- **Testing**: Vitest (Integration), Playwright (E2E)
+- **Language**: TypeScript 5
+
+## Setup & Commands
+Follow this "happy path" for local development and deployment:
+
+```bash
+# 1. Install dependencies
+npm install
+
+# 2. Login to Cloudflare (required for D1/R2 bindings)
+npx wrangler login
+
+# 3. Generate types for Payload and Cloudflare
+npm run generate:types
+
+# 4. Start local development server
+npm run dev
+
+# 5. Run tests
+npm run test:int     # Integration tests
+npm run test:e2e     # E2E tests
+
+# 6. Lint and format
+npm run lint
+
+# 7. Build and Deploy
+npm run build
+npm run deploy       # Deploys both database migrations and the application
+```
+
+## Project Structure
+- `src/app/(frontend)/`: Frontend routes and UI components.
+- `src/app/(payload)/`: Payload admin panel routes.
+- `src/collections/`: Payload collection configurations (schema, hooks, access).
+- `src/globals/`: Payload global configurations.
+- `src/components/`: Shared React components.
+- `src/hooks/`: Reusable Payload and React hooks.
+- `src/access/`: Access control logic for collections and fields.
+- `tests/`: Integration and E2E test suites.
+- `wrangler.jsonc`: Cloudflare environment and bindings configuration.
+
+## Code Style & Conventions
+- **TypeScript**: Strict typing is required. Avoid `any`. Use types from `@/payload-types.ts`.
+- **Formatting**: Managed by Prettier. Run `npm run lint` before committing.
+- **Payload Config**: Main config is in `src/payload.config.ts`.
+- **Imports**: Use `@/` alias for `src/` directory imports.
+- **Naming**: 
+  - Collections: PascalCase (e.g., `Users.ts`, `Posts.ts`).
+  - Components: PascalCase.
+  - Hooks: camelCase (starting with `use` or `before/after`).
+
+## Testing
+- **Integration**: Use Vitest for testing business logic and Payload operations.
+- **E2E**: Use Playwright for critical user flows and UI testing.
+- **CI**: Ensure all tests pass before suggesting a PR.
+
+## Security
+- **Access Control**: Always implement restrictive access control in `collections` and `globals`.
+- **Secrets**: Never commit `.env` files. Use Cloudflare Secrets for production variables.
+- **Local API**: When using `payload.find()` or similar in server components, remember that access control is bypassed by default unless `overrideAccess: false` is set.
+
+## Git & PR Workflow
+- **Branching**: Use descriptive branch names (e.g., `feat/add-blog-collection`, `fix/login-styles`).
+- **Commits**: Use Conventional Commits (e.g., `feat: ...`, `fix: ...`, `chore: ...`).
+- **PRs**: Keep PRs focused. Include tests for any new functionality.
+
+## Agent Behavior
+- **Type Generation**: ALWAYS run `npm run generate:types` after modifying collection or global schemas.
+- **Migrations**: Use `npx payload migrate:create` when schema changes require database updates.
+- **Cloudflare Environment**: Be aware of Cloudflare Worker limits (e.g., 3MB bundle size). Minimize large dependencies.
+- **Context**: Refer to `.cursor/rules/` for deep-dives into specific Payload patterns (Access Control, Hooks, etc.).
+
+---
+
 # Payload CMS Development Rules
 
-You are an expert Payload CMS developer. When working with Payload projects, follow these rules:
+Follow these rules when working with Payload projects:
 
 ## Core Principles
 
@@ -15,21 +104,6 @@ You are an expert Payload CMS developer. When working with Payload projects, fol
 
 - To validate typescript correctness after modifying code run `tsc --noEmit`
 - Generate import maps after creating or modifying components.
-
-## Project Structure
-
-```
-src/
-├── app/
-│   ├── (frontend)/          # Frontend routes
-│   └── (payload)/           # Payload admin routes
-├── collections/             # Collection configs
-├── globals/                 # Global configs
-├── components/              # Custom React components
-├── hooks/                   # Hook functions
-├── access/                  # Access control functions
-└── payload.config.ts        # Main config
-```
 
 ## Configuration
 
@@ -575,20 +649,6 @@ export default buildConfig({
 })
 ```
 
-**Component Path Rules:**
-
-- Paths are relative to project root or `config.admin.importMap.baseDir`
-- Named exports: use `#ExportName` suffix or `exportName` property
-- Default exports: no suffix needed
-- File extensions can be omitted
-
-### Component Types
-
-1. **Root Components** - Global Admin Panel (logo, nav, header)
-2. **Collection Components** - Collection-specific (edit view, list view)
-3. **Global Components** - Global document views
-4. **Field Components** - Custom field UI and cells
-
 ### Component Types
 
 1. **Root Components** - Global Admin Panel (logo, nav, header)
@@ -658,70 +718,6 @@ export function MyComponent() {
 }
 ```
 
-### Collection/Global Components
-
-```typescript
-export const Posts: CollectionConfig = {
-  slug: 'posts',
-  admin: {
-    components: {
-      // Edit view
-      edit: {
-        PreviewButton: '/components/PostPreview',
-        SaveButton: '/components/CustomSave',
-        SaveDraftButton: '/components/SaveDraft',
-        PublishButton: '/components/Publish',
-      },
-
-      // List view
-      list: {
-        Header: '/components/ListHeader',
-        beforeList: ['/components/BulkActions'],
-        afterList: ['/components/ListFooter'],
-      },
-    },
-  },
-}
-```
-
-### Field Components
-
-```typescript
-{
-  name: 'status',
-  type: 'select',
-  options: ['draft', 'published'],
-  admin: {
-    components: {
-      // Edit view field
-      Field: '/components/StatusField',
-      // List view cell
-      Cell: '/components/StatusCell',
-      // Field label
-      Label: '/components/StatusLabel',
-      // Field description
-      Description: '/components/StatusDescription',
-      // Error message
-      Error: '/components/StatusError',
-    },
-  },
-}
-```
-
-**UI Field** (presentational only, no data):
-
-```typescript
-{
-  name: 'refundButton',
-  type: 'ui',
-  admin: {
-    components: {
-      Field: '/components/RefundButton',
-    },
-  },
-}
-```
-
 ### Performance Best Practices
 
 1. **Import correctly:**
@@ -777,45 +773,6 @@ export function MyComponent() {
 }
 ```
 
-### Type Safety
-
-```tsx
-import type {
-  TextFieldServerComponent,
-  TextFieldClientComponent,
-  TextFieldCellComponent,
-  SelectFieldServerComponent,
-  // ... etc
-} from 'payload'
-
-export const MyField: TextFieldClientComponent = (props) => {
-  // Fully typed props
-}
-```
-
-### Import Map
-
-Payload auto-generates `app/(payload)/admin/importMap.js` to resolve component paths.
-
-**Regenerate manually:**
-
-```bash
-payload generate:importmap
-```
-
-**Set custom location:**
-
-```typescript
-export default buildConfig({
-  admin: {
-    importMap: {
-      baseDir: path.resolve(dirname, 'src'),
-      importMapFile: path.resolve(dirname, 'app', 'custom-import-map.js'),
-    },
-  },
-})
-```
-
 ## Custom Endpoints
 
 ```typescript
@@ -838,23 +795,6 @@ export const protectedEndpoint: Endpoint = {
     })
 
     return Response.json(data)
-  },
-}
-
-// Route parameters
-export const trackingEndpoint: Endpoint = {
-  path: '/:id/tracking',
-  method: 'get',
-  handler: async (req) => {
-    const { id } = req.routeParams
-
-    const tracking = await getTrackingInfo(id)
-
-    if (!tracking) {
-      return Response.json({ error: 'not found' }, { status: 404 })
-    }
-
-    return Response.json(tracking)
   },
 }
 ```
@@ -881,20 +821,6 @@ export const Pages: CollectionConfig = {
     },
   },
 }
-
-// Create draft
-await payload.create({
-  collection: 'pages',
-  data: { title: 'Draft Page' },
-  draft: true, // Skips required field validation
-})
-
-// Read with drafts
-const page = await payload.findByID({
-  collection: 'pages',
-  id: '123',
-  draft: true, // Returns draft if available
-})
 ```
 
 ## Field Type Guards
@@ -919,63 +845,7 @@ function processField(field: Field) {
   if (fieldHasSubFields(field)) {
     field.fields.forEach(processField) // Safe to access
   }
-
-  // Check field type
-  if (fieldIsArrayType(field)) {
-    console.log(field.minRows, field.maxRows)
-  }
-
-  // Check capabilities
-  if (fieldSupportsMany(field) && field.hasMany) {
-    console.log('Multiple values supported')
-  }
 }
-```
-
-## Plugins
-
-### Using Plugins
-
-```typescript
-import { seoPlugin } from '@payloadcms/plugin-seo'
-import { redirectsPlugin } from '@payloadcms/plugin-redirects'
-
-export default buildConfig({
-  plugins: [
-    seoPlugin({
-      collections: ['posts', 'pages'],
-    }),
-    redirectsPlugin({
-      collections: ['pages'],
-    }),
-  ],
-})
-```
-
-### Creating Plugins
-
-```typescript
-import type { Config, Plugin } from 'payload'
-
-interface MyPluginConfig {
-  collections?: string[]
-  enabled?: boolean
-}
-
-export const myPlugin =
-  (options: MyPluginConfig): Plugin =>
-  (config: Config): Config => ({
-    ...config,
-    collections: config.collections?.map((collection) => {
-      if (options.collections?.includes(collection.slug)) {
-        return {
-          ...collection,
-          fields: [...collection.fields, { name: 'pluginField', type: 'text' }],
-        }
-      }
-      return collection
-    }),
-  })
 ```
 
 ## Best Practices
@@ -1012,14 +882,6 @@ export const myPlugin =
 4. Use `as const` for field options
 5. Use field type guards for runtime type checking
 
-### Organization
-
-1. Keep collections in separate files
-2. Extract access control to `access/` directory
-3. Extract hooks to `hooks/` directory
-4. Use reusable field factories for common patterns
-5. Document complex access control with comments
-
 ## Common Gotchas
 
 1. **Local API Default**: Access control bypassed unless `overrideAccess: false`
@@ -1029,110 +891,25 @@ export const myPlugin =
 5. **Relationship Depth**: Default depth is 2, set to 0 for IDs only
 6. **Draft Status**: `_status` field auto-injected when drafts enabled
 7. **Type Generation**: Types not updated until `generate:types` runs
-8. **MongoDB Transactions**: Require replica set configuration
-9. **SQLite Transactions**: Disabled by default, enable with `transactionOptions: {}`
-10. **Point Fields**: Not supported in SQLite
+8. **SQLite Transactions**: Disabled by default, enable with `transactionOptions: {}`
 
-## Additional Context Files
+## Additional Resources
 
 For deeper exploration of specific topics, refer to the context files located in `.cursor/rules/`:
 
-### Available Context Files
-
 1. **`payload-overview.md`** - High-level architecture and core concepts
-
-   - Payload structure and initialization
-   - Configuration fundamentals
-   - Database adapters overview
-
-2. **`security-critical.md`** - Critical security patterns (⚠️ IMPORTANT)
-
-   - Local API access control
-   - Transaction safety in hooks
-   - Preventing infinite hook loops
-
+2. **`security-critical.mdc`** - Critical security patterns (⚠️ IMPORTANT)
 3. **`collections.md`** - Collection configurations
-
-   - Basic collection patterns
-   - Auth collections with RBAC
-   - Upload collections
-   - Drafts and versioning
-   - Globals
-
 4. **`fields.md`** - Field types and patterns
-
-   - All field types with examples
-   - Conditional fields
-   - Virtual fields
-   - Field validation
-   - Common field patterns
-
 5. **`field-type-guards.md`** - TypeScript field type utilities
-
-   - Field type checking utilities
-   - Safe type narrowing
-   - Runtime field validation
-
 6. **`access-control.md`** - Permission patterns
-
-   - Collection-level access
-   - Field-level access
-   - Row-level security
-   - RBAC patterns
-   - Multi-tenant access control
-
 7. **`access-control-advanced.md`** - Complex access patterns
-
-   - Nested document access
-   - Cross-collection permissions
-   - Dynamic role hierarchies
-   - Performance optimization
-
 8. **`hooks.md`** - Lifecycle hooks
-
-   - Collection hooks
-   - Field hooks
-   - Hook context patterns
-   - Common hook recipes
-
 9. **`queries.md`** - Database operations
-
-   - Local API usage
-   - Query operators
-   - Complex queries with AND/OR
-   - Performance optimization
-
 10. **`endpoints.md`** - Custom API endpoints
-
-    - REST endpoint patterns
-    - Authentication in endpoints
-    - Error handling
-    - Route parameters
-
 11. **`adapters.md`** - Database and storage adapters
-
-    - MongoDB, PostgreSQL, SQLite patterns
-    - Storage adapter usage (S3, Azure, GCS, etc.)
-    - Custom adapter development
-
 12. **`plugin-development.md`** - Creating plugins
-
-    - Plugin architecture
-    - Modifying configuration
-    - Plugin hooks
-    - Best practices
-
 13. **`components.md`** - Custom Components
-
-    - Component types (Root, Collection, Global, Field)
-    - Server vs Client Components
-    - Component paths and definition
-    - Default and custom props
-    - Using hooks
-    - Performance best practices
-    - Styling components
-
-## Resources
 
 - Docs: https://payloadcms.com/docs
 - LLM Context: https://payloadcms.com/llms-full.txt
