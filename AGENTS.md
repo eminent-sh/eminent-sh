@@ -916,3 +916,25 @@ For deeper exploration of specific topics, refer to the context files located in
 - GitHub: https://github.com/payloadcms/payload
 - Examples: https://github.com/payloadcms/payload/tree/main/examples
 - Templates: https://github.com/payloadcms/payload/tree/main/templates
+
+## Cursor Cloud specific instructions
+
+### Environment Setup
+- A `.env` file with `PAYLOAD_SECRET` (any hex string, e.g. from `openssl rand -hex 32`) is required before starting the dev server.
+- No Docker or external services are needed. Cloudflare D1 and R2 are emulated locally via wrangler's platform proxy, which is started automatically by `npm run dev`.
+- `npx wrangler login` is only needed for remote/production operations and `generate:types:cloudflare`. Local development works without it as long as `cloudflare-env.d.ts` already exists in the repo.
+
+### Running Services
+- **Dev server**: `npm run dev` starts Next.js on http://localhost:3000 with local D1/R2 emulation.
+- **Admin panel**: Available at http://localhost:3000/admin. First user is created at `/api/users/first-register`.
+- The dev server first-start compiles pages on demand; initial page loads may take 10-20s.
+
+### Known Test Issues (pre-existing)
+- **Integration tests** (`npm run test:int`): Fail due to jsdom environment conflicting with esbuild's TextEncoder invariant (vitest uses `environment: 'jsdom'` but the payload config imports wrangler which uses esbuild).
+- **E2E admin tests** (`npm run test:e2e`): The `seedUser.ts` helper imports `payload.config.ts` directly, which crashes because `realpath()` in the config can return `undefined` when `process.argv` paths don't exist on disk.
+- **E2E frontend test**: Fails because the test assertion expects the default template title "Payload Blank Template" but the app uses "Bespoke Solutions by EMINENT".
+- **Lint** (`npm run lint`): Passes cleanly (warnings only, no errors).
+
+### Type Generation
+- Run `npm run generate:types` after schema changes (combines cloudflare + payload type generation).
+- If wrangler login isn't available, run only `npm run generate:types:payload` for Payload types.
