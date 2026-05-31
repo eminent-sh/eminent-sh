@@ -8,6 +8,14 @@ import { CloudflareContext, getCloudflareContext } from '@opennextjs/cloudflare'
 import { GetPlatformProxyOptions } from 'wrangler'
 import { r2Storage } from '@payloadcms/storage-r2'
 import { seoPlugin } from '@payloadcms/plugin-seo'
+import { formBuilderPlugin } from '@payloadcms/plugin-form-builder'
+import { redirectsPlugin } from '@payloadcms/plugin-redirects'
+import { mcpPlugin } from '@payloadcms/plugin-mcp'
+import { stripePlugin } from '@payloadcms/plugin-stripe'
+import { multiTenantPlugin } from '@payloadcms/plugin-multi-tenant'
+import { searchPlugin } from '@payloadcms/plugin-search'
+
+import type { Config } from '@/payload-types'
 
 import { Users } from './collections/Users'
 import { Media } from './collections/Media'
@@ -15,6 +23,7 @@ import { Posts } from './collections/Posts'
 import { Categories } from './collections/Categories'
 import { Tags } from './collections/Tags'
 import { Projects } from './collections/Projects'
+import { Tenants } from './collections/Tenants'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -55,7 +64,7 @@ export default buildConfig({
       baseDir: path.resolve(dirname),
     },
   },
-  collections: [Users, Media, Posts, Projects, Categories, Tags],
+  collections: [Users, Tenants, Media, Posts, Projects, Categories, Tags],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',
   typescript: {
@@ -96,6 +105,45 @@ export default buildConfig({
           admin: { description: 'Comma-separated keywords for meta keywords.' },
         },
       ],
+    }),
+    formBuilderPlugin({
+      redirectRelationships: ['posts', 'projects'],
+    }),
+    redirectsPlugin({
+      collections: ['posts', 'projects'],
+    }),
+    mcpPlugin({
+      collections: {
+        posts: { enabled: true },
+        projects: { enabled: true },
+        categories: { enabled: { find: true } },
+        tags: { enabled: { find: true } },
+        media: { enabled: { find: true } },
+      },
+    }),
+    stripePlugin({
+      stripeSecretKey: process.env.STRIPE_SECRET_KEY || '',
+      stripeWebhooksEndpointSecret: process.env.STRIPE_WEBHOOKS_ENDPOINT_SECRET,
+    }),
+    multiTenantPlugin<Config>({
+      collections: {
+        media: {},
+        posts: {},
+        projects: {},
+        categories: {},
+        tags: {},
+      },
+    }),
+    searchPlugin({
+      collections: ['posts', 'projects'],
+      defaultPriorities: {
+        posts: 20,
+        projects: 10,
+      },
+      beforeSync: ({ originalDoc, searchDoc }) => ({
+        ...searchDoc,
+        title: searchDoc.title || (originalDoc as { title?: string })?.title,
+      }),
     }),
   ],
 })
