@@ -2,7 +2,6 @@ import Link from 'next/link'
 import React from 'react'
 
 import { Hero } from '@/components/Hero'
-import { HERO_SIZE_SPLASH } from '@/components/hero-layout'
 
 export const metadata = {
   title: 'Contact | EMINENT',
@@ -14,12 +13,12 @@ export default async function ContactPage() {
   return (
     <>
       <Hero
-        size={HERO_SIZE_SPLASH}
+        variant="page"
         title="Contact"
         description="Need a technical consultation or have a project in mind? Get in touch and let's discuss how we can help bring your vision to life."
         imageKey="contact"
       >
-        <div className="flex flex-col items-center gap-1">
+        <div className="mt-10 flex flex-col items-center gap-1">
           <span className="text-xs font-medium uppercase tracking-wider text-white/70">
             Email
           </span>

@@ -1,15 +1,7 @@
 import React from 'react'
+import Link from 'next/link'
+import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
-import {
-  type HeroSize,
-  getHeroInnerClassName,
-  getHeroSectionClassName,
-  heroBannerClassName,
-  heroContentClusterClassName,
-  heroContentRegionClassName,
-  heroDescriptionClassName,
-  heroTitleClassName,
-} from '@/components/hero-layout'
 
 function HeroBackground() {
   return (
@@ -42,6 +34,8 @@ function HeroBackground() {
   )
 }
 
+type HeroVariant = 'home' | 'page'
+
 const HERO_IMAGES = {
   home: 'https://media.eminent.sh/home-hero.jpg',
   contact: 'https://media.eminent.sh/contact-hero.jpg',
@@ -49,50 +43,45 @@ const HERO_IMAGES = {
   projects: 'https://media.eminent.sh/projects-hero.jpg',
 } as const
 
-function HeroTitle({
-  title,
-  titleClassName,
-}: {
-  title: React.ReactNode
-  titleClassName?: string
-}) {
-  const className = cn(heroTitleClassName, titleClassName)
+const heroInnerTallClassName =
+  'relative mx-auto flex h-[50vh] max-w-4xl flex-col items-center justify-center px-6 py-20 text-center sm:px-8 md:py-28'
 
-  if (typeof title === 'string') {
-    return <h1 className={className}>{title}</h1>
-  }
-
-  return <div className={className}>{title}</div>
-}
+const heroInnerCompactClassName =
+  'relative mx-auto flex max-w-4xl flex-col items-center px-6 py-12 text-center sm:px-8 sm:py-14'
 
 export interface HeroProps {
-  /** Defaults to compact; use `HERO_SIZE_SPLASH` for full splashes (see hero-layout.ts) */
-  size?: HeroSize
+  variant?: HeroVariant
+  /** Short heading band for filter and legal pages */
+  size?: 'compact'
   title?: React.ReactNode
-  titleClassName?: string
   description?: string
-  /** Optional content above the title band (e.g. home consultation link) */
-  banner?: React.ReactNode
   children?: React.ReactNode
   backgroundImage?: string
   imageKey?: keyof typeof HERO_IMAGES
 }
 
 export function Hero({
-  size = 'compact',
+  variant = 'page',
+  size,
   title,
-  titleClassName,
   description,
-  banner,
   children,
   backgroundImage: backgroundImageProp,
   imageKey,
 }: HeroProps) {
-  const isTall = size === 'tall'
+  const isHome = variant === 'home'
+  const isCompact = size === 'compact'
+  const isTall = isHome || !isCompact
   const backgroundImage =
     backgroundImageProp ?? (imageKey ? HERO_IMAGES[imageKey] : undefined)
+
   return (
-    <section className={getHeroSectionClassName(size)}>
+    <section
+      className={cn(
+        'relative -mt-20 w-full bg-black pt-20 text-white',
+        isTall ? 'h-[calc(5rem+50vh)]' : 'min-h-0',
+      )}
+    >
       {backgroundImage && (
         <>
           <div
@@ -111,25 +100,49 @@ export function Hero({
         </>
       )}
       <HeroBackground />
-
-      <div className={getHeroInnerClassName(size)}>
-        {isTall ? (
+      <div className={isTall ? heroInnerTallClassName : heroInnerCompactClassName}>
+        {isHome ? (
           <>
-            {banner && <div className={heroBannerClassName}>{banner}</div>}
-            <div className={heroContentRegionClassName}>
-              <div className={heroContentClusterClassName}>
-                {title && <HeroTitle title={title} titleClassName={titleClassName} />}
-                {description && <p className={heroDescriptionClassName}>{description}</p>}
-                {children}
-              </div>
-            </div>
+            <Link
+              href="/contact"
+              className="mb-6 inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/5 px-4 py-2 text-sm text-white hover:border-white/30 hover:bg-white/10"
+            >
+              Need a technical consultation?{' '}
+              <span className="font-semibold">Get in touch →</span>
+            </Link>
+            <h1 className="text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl lg:text-7xl">
+              Bespoke Solutions for
+              <br />
+              Niche Requirements
+            </h1>
+            <p className="mt-4 text-lg text-white/80 sm:text-xl">
+              DevOps · Software · Websites
+            </p>
+            <Button
+              asChild
+              size="lg"
+              className="mt-8 rounded-md bg-white px-6 text-black hover:bg-white/90"
+            >
+              <Link href="/projects">View Projects</Link>
+            </Button>
           </>
         ) : (
-          <div className="flex w-full flex-col items-center">
-            {title && <HeroTitle title={title} titleClassName={titleClassName} />}
-            {description && <p className={heroDescriptionClassName}>{description}</p>}
+          <>
+            {title &&
+              (typeof title === 'string' ? (
+                <h1 className="text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl">
+                  {title}
+                </h1>
+              ) : (
+                <div className="text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl">
+                  {title}
+                </div>
+              ))}
+            {description && (
+              <p className="mt-4 max-w-2xl text-lg text-white/85 sm:text-xl">{description}</p>
+            )}
             {children}
-          </div>
+          </>
         )}
       </div>
     </section>

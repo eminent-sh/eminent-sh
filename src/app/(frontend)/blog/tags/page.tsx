@@ -49,7 +49,7 @@ export default async function TagsIndexPage() {
 
   return (
     <>
-      <Hero title="Tags" imageKey="blog" />
+      <Hero size="compact" title="Tags" imageKey="blog" />
 
       <div className="mx-auto max-w-3xl px-6 py-12 sm:px-8">
         <Breadcrumbs

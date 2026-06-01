@@ -8,7 +8,6 @@ import type { JSXConvertersFunction } from '@payloadcms/richtext-lexical/react'
 import type { SerializedHeadingNode } from '@payloadcms/richtext-lexical'
 import type { Category, Media, Tag, User, Post } from '@/payload-types'
 import { Hero } from '@/components/Hero'
-import { HERO_SIZE_SPLASH } from '@/components/hero-layout'
 import { getFeaturedImageUrl } from '@/lib/featured-image'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { TagBadge } from '@/components/TagBadge'
@@ -169,7 +168,7 @@ export default async function PostPage({ params }: PageProps) {
   return (
     <>
       <Hero
-        size={HERO_SIZE_SPLASH}
+        variant="page"
         title={post.title}
         backgroundImage={featuredImageUrl ?? undefined}
         imageKey="blog"

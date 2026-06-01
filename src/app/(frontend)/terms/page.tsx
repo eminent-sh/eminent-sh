@@ -12,7 +12,7 @@ const LAST_UPDATED = 'April 11, 2026'
 export default function TermsPage() {
   return (
     <>
-      <Hero title="Terms of Service">
+      <Hero size="compact" title="Terms of Service">
         <p className="mt-3 text-sm text-white/70 sm:text-base">Last updated: {LAST_UPDATED}</p>
       </Hero>
 

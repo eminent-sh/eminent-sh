@@ -12,7 +12,7 @@ const LAST_UPDATED = 'April 11, 2026'
 export default function PrivacyPage() {
   return (
     <>
-      <Hero title="Privacy Policy">
+      <Hero size="compact" title="Privacy Policy">
         <p className="mt-3 text-sm text-white/70 sm:text-base">Last updated: {LAST_UPDATED}</p>
       </Hero>
 

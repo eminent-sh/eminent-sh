@@ -49,7 +49,7 @@ export default async function ProjectCategoriesIndexPage() {
 
   return (
     <>
-      <Hero title="Categories" imageKey="projects" />
+      <Hero size="compact" title="Categories" imageKey="projects" />
 
       <div className="mx-auto max-w-3xl px-6 py-12 sm:px-8">
         <Breadcrumbs

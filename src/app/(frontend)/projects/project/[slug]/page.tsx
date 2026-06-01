@@ -9,7 +9,6 @@ import type { JSXConvertersFunction } from '@payloadcms/richtext-lexical/react'
 import type { SerializedHeadingNode } from '@payloadcms/richtext-lexical'
 import type { Category, Media, Tag } from '@/payload-types'
 import { Hero } from '@/components/Hero'
-import { HERO_SIZE_SPLASH } from '@/components/hero-layout'
 import { getFeaturedImageUrl } from '@/lib/featured-image'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { TagBadge } from '@/components/TagBadge'
@@ -149,7 +148,7 @@ export default async function ProjectPage({ params }: PageProps) {
   return (
     <>
       <Hero
-        size={HERO_SIZE_SPLASH}
+        variant="page"
         title={project.title}
         backgroundImage={featuredImageUrl ?? undefined}
         imageKey="projects"
