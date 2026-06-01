@@ -12,10 +12,7 @@ import { formBuilderPlugin } from '@payloadcms/plugin-form-builder'
 import { redirectsPlugin } from '@payloadcms/plugin-redirects'
 import { mcpPlugin } from '@payloadcms/plugin-mcp'
 import { stripePlugin } from '@payloadcms/plugin-stripe'
-import { multiTenantPlugin } from '@payloadcms/plugin-multi-tenant'
 import { searchPlugin } from '@payloadcms/plugin-search'
-
-import type { Config } from '@/payload-types'
 
 import { Users } from './collections/Users'
 import { Media } from './collections/Media'
@@ -23,7 +20,6 @@ import { Posts } from './collections/Posts'
 import { Categories } from './collections/Categories'
 import { Tags } from './collections/Tags'
 import { Projects } from './collections/Projects'
-import { Tenants } from './collections/Tenants'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -52,10 +48,37 @@ const cloudflareLogger = {
   silent: () => {},
 } as any // Use PayloadLogger type when it's exported
 
-const cloudflare =
-  isCLI || !isProduction
-    ? await getCloudflareContextFromWrangler()
-    : await getCloudflareContext({ async: true })
+const cloudflareContextSymbol = Symbol.for('__cloudflare-context__')
+
+type GlobalWithCloudflareContext = typeof globalThis & {
+  [cloudflareContextSymbol]?: CloudflareContext
+}
+
+let cloudflareContextPromise: Promise<CloudflareContext> | undefined
+
+async function resolveCloudflareContext(): Promise<CloudflareContext> {
+  const global = globalThis as GlobalWithCloudflareContext
+  const cached = global[cloudflareContextSymbol]
+  if (cached) {
+    return cached
+  }
+
+  if (!cloudflareContextPromise) {
+    cloudflareContextPromise = (async () => {
+      const context =
+        isProduction && !isCLI
+          ? await getCloudflareContext({ async: true })
+          : await getCloudflareContextFromWrangler()
+
+      global[cloudflareContextSymbol] = context
+      return context
+    })()
+  }
+
+  return cloudflareContextPromise
+}
+
+const cloudflare = await resolveCloudflareContext()
 
 export default buildConfig({
   admin: {
@@ -64,14 +87,14 @@ export default buildConfig({
       baseDir: path.resolve(dirname),
     },
   },
-  collections: [Users, Tenants, Media, Posts, Projects, Categories, Tags],
+  collections: [Users, Media, Posts, Projects, Categories, Tags],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',
   typescript: {
     outputFile: path.resolve(dirname, 'payload-types.ts'),
   },
   db: sqliteD1Adapter({ binding: cloudflare.env.D1 }),
-  logger: isProduction ? cloudflareLogger : undefined,
+  logger: cloudflareLogger,
   plugins: [
     r2Storage({
       bucket: cloudflare.env.R2,
@@ -116,23 +139,14 @@ export default buildConfig({
       collections: {
         posts: { enabled: true },
         projects: { enabled: true },
-        categories: { enabled: { find: true } },
-        tags: { enabled: { find: true } },
-        media: { enabled: { find: true } },
+        categories: { enabled: { find: true, create: true } },
+        tags: { enabled: { find: true, create: true } },
+        media: { enabled: { find: true, create: true } },
       },
     }),
     stripePlugin({
       stripeSecretKey: process.env.STRIPE_SECRET_KEY || '',
       stripeWebhooksEndpointSecret: process.env.STRIPE_WEBHOOKS_ENDPOINT_SECRET,
-    }),
-    multiTenantPlugin<Config>({
-      collections: {
-        media: {},
-        posts: {},
-        projects: {},
-        categories: {},
-        tags: {},
-      },
     }),
     searchPlugin({
       collections: ['posts', 'projects'],

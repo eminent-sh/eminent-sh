@@ -7,15 +7,17 @@ export const metadata: Metadata = {
   description: 'Terms of Service for EMINENT MEDIA LLC.',
 }
 
+const LAST_UPDATED = 'April 11, 2026'
+
 export default function TermsPage() {
   return (
     <>
-      <Hero variant="page" title="Terms of Service" />
+      <Hero title="Terms of Service">
+        <p className="mt-3 text-sm text-white/70 sm:text-base">Last updated: {LAST_UPDATED}</p>
+      </Hero>
 
       <div className="mx-auto max-w-3xl px-6 py-12 sm:px-8">
         <div className="prose prose-invert prose-sm max-w-none sm:prose-base">
-          <p className="text-sm text-muted-foreground">Last updated: April 11, 2026</p>
-
           <h2>Agreement to Terms</h2>
           <p>
             By accessing and using this website, you accept and agree to be bound by the terms and

@@ -69,7 +69,6 @@ export interface Config {
   blocks: {};
   collections: {
     users: User;
-    tenants: Tenant;
     media: Media;
     posts: Post;
     projects: Project;
@@ -88,7 +87,6 @@ export interface Config {
   collectionsJoins: {};
   collectionsSelect: {
     users: UsersSelect<false> | UsersSelect<true>;
-    tenants: TenantsSelect<false> | TenantsSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     posts: PostsSelect<false> | PostsSelect<true>;
     projects: ProjectsSelect<false> | ProjectsSelect<true>;
@@ -162,12 +160,6 @@ export interface PayloadMcpApiKeyAuthOperations {
  */
 export interface User {
   id: number;
-  tenants?:
-    | {
-        tenant: number | Tenant;
-        id?: string | null;
-      }[]
-    | null;
   updatedAt: string;
   createdAt: string;
   email: string;
@@ -188,35 +180,11 @@ export interface User {
   collection: 'users';
 }
 /**
- * Organizations or sites that own content in this multi-tenant installation.
- *
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "tenants".
- */
-export interface Tenant {
-  id: number;
-  /**
-   * Display name for this tenant.
-   */
-  name: string;
-  /**
-   * URL-safe identifier used to filter content by tenant.
-   */
-  slug: string;
-  /**
-   * Primary domain for this tenant (e.g. example.com).
-   */
-  domain: string;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "media".
  */
 export interface Media {
   id: number;
-  tenant?: (number | null) | Tenant;
   alt: string;
   updatedAt: string;
   createdAt: string;
@@ -236,7 +204,6 @@ export interface Media {
  */
 export interface Post {
   id: number;
-  tenant?: (number | null) | Tenant;
   /**
    * Post headline. Used for slug auto-generation and SEO fallbacks.
    */
@@ -324,7 +291,6 @@ export interface Post {
  */
 export interface Category {
   id: number;
-  tenant?: (number | null) | Tenant;
   name: string;
   /**
    * When enabled, the slug will auto-generate from the title field on save and autosave.
@@ -346,7 +312,6 @@ export interface Category {
  */
 export interface Tag {
   id: number;
-  tenant?: (number | null) | Tenant;
   name: string;
   /**
    * When enabled, the slug will auto-generate from the title field on save and autosave.
@@ -364,7 +329,6 @@ export interface Tag {
  */
 export interface Project {
   id: number;
-  tenant?: (number | null) | Tenant;
   /**
    * Project name. Used for slug auto-generation and SEO fallbacks.
    */
@@ -721,18 +685,30 @@ export interface PayloadMcpApiKey {
      * Allow clients to find categories.
      */
     find?: boolean | null;
+    /**
+     * Allow clients to create categories.
+     */
+    create?: boolean | null;
   };
   tags?: {
     /**
      * Allow clients to find tags.
      */
     find?: boolean | null;
+    /**
+     * Allow clients to create tags.
+     */
+    create?: boolean | null;
   };
   media?: {
     /**
      * Allow clients to find media.
      */
     find?: boolean | null;
+    /**
+     * Allow clients to create media.
+     */
+    create?: boolean | null;
   };
   updatedAt: string;
   createdAt: string;
@@ -790,10 +766,6 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'users';
         value: number | User;
-      } | null)
-    | ({
-        relationTo: 'tenants';
-        value: number | Tenant;
       } | null)
     | ({
         relationTo: 'media';
@@ -892,12 +864,6 @@ export interface PayloadMigration {
  * via the `definition` "users_select".
  */
 export interface UsersSelect<T extends boolean = true> {
-  tenants?:
-    | T
-    | {
-        tenant?: T;
-        id?: T;
-      };
   updatedAt?: T;
   createdAt?: T;
   email?: T;
@@ -917,21 +883,9 @@ export interface UsersSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "tenants_select".
- */
-export interface TenantsSelect<T extends boolean = true> {
-  name?: T;
-  slug?: T;
-  domain?: T;
-  updatedAt?: T;
-  createdAt?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "media_select".
  */
 export interface MediaSelect<T extends boolean = true> {
-  tenant?: T;
   alt?: T;
   updatedAt?: T;
   createdAt?: T;
@@ -948,7 +902,6 @@ export interface MediaSelect<T extends boolean = true> {
  * via the `definition` "posts_select".
  */
 export interface PostsSelect<T extends boolean = true> {
-  tenant?: T;
   title?: T;
   generateSlug?: T;
   slug?: T;
@@ -977,7 +930,6 @@ export interface PostsSelect<T extends boolean = true> {
  * via the `definition` "projects_select".
  */
 export interface ProjectsSelect<T extends boolean = true> {
-  tenant?: T;
   title?: T;
   generateSlug?: T;
   slug?: T;
@@ -999,7 +951,6 @@ export interface ProjectsSelect<T extends boolean = true> {
  * via the `definition` "categories_select".
  */
 export interface CategoriesSelect<T extends boolean = true> {
-  tenant?: T;
   name?: T;
   generateSlug?: T;
   slug?: T;
@@ -1012,7 +963,6 @@ export interface CategoriesSelect<T extends boolean = true> {
  * via the `definition` "tags_select".
  */
 export interface TagsSelect<T extends boolean = true> {
-  tenant?: T;
   name?: T;
   generateSlug?: T;
   slug?: T;
@@ -1214,16 +1164,19 @@ export interface PayloadMcpApiKeysSelect<T extends boolean = true> {
     | T
     | {
         find?: T;
+        create?: T;
       };
   tags?:
     | T
     | {
         find?: T;
+        create?: T;
       };
   media?:
     | T
     | {
         find?: T;
+        create?: T;
       };
   updatedAt?: T;
   createdAt?: T;

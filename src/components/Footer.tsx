@@ -3,9 +3,7 @@ import Link from "next/link"
 
 export function Footer() {
     return (
-        <footer
-            className="w-full fixed bottom-0 bg-black"
-        >
+        <footer className="w-full bg-black">
             <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 flex justify-between items-center text-sm text-muted-foreground">
                 <div>
                     <p>EMINENT MEDIA LLC © {new Date().getFullYear()}</p>

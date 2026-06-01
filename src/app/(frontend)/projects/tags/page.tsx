@@ -49,7 +49,7 @@ export default async function ProjectTagsIndexPage() {
 
   return (
     <>
-      <Hero variant="page" title="Tags" imageKey="projects" />
+      <Hero title="Tags" imageKey="projects" />
 
       <div className="mx-auto max-w-3xl px-6 py-12 sm:px-8">
         <Breadcrumbs

@@ -18,8 +18,8 @@ export default async function RootLayout(props: { children: React.ReactNode }) {
   const analyticsId = process.env.ANALYTICS_ID
 
   return (
-    <html lang="en">
-      <body>
+    <html lang="en" className="min-h-screen">
+      <body className="flex min-h-screen flex-col">
         {analyticsId ? (
           <>
             <Script
@@ -38,7 +38,7 @@ export default async function RootLayout(props: { children: React.ReactNode }) {
           </>
         ) : null}
         <Header />
-        <main className="pt-20">{children}</main>
+        <main className="flex-1 pt-20">{children}</main>
         <Footer />
       </body>
     </html>

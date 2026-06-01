@@ -8,6 +8,8 @@ import type { JSXConvertersFunction } from '@payloadcms/richtext-lexical/react'
 import type { SerializedHeadingNode } from '@payloadcms/richtext-lexical'
 import type { Category, Media, Tag, User, Post } from '@/payload-types'
 import { Hero } from '@/components/Hero'
+import { HERO_SIZE_SPLASH } from '@/components/hero-layout'
+import { getFeaturedImageUrl } from '@/lib/featured-image'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { TagBadge } from '@/components/TagBadge'
 import { TableOfContents, extractHeadings } from '@/components/TableOfContents'
@@ -126,6 +128,7 @@ export default async function PostPage({ params }: PageProps) {
   const date = formatDate(post.publishedAt)
 
   const headings = post.content ? extractHeadings(post.content) : []
+  const featuredImageUrl = getFeaturedImageUrl(post.featuredImage)
 
   const [prevResult, nextResult] = await Promise.all([
     post.publishedAt
@@ -165,7 +168,12 @@ export default async function PostPage({ params }: PageProps) {
 
   return (
     <>
-      <Hero variant="page" title={post.title} imageKey="blog" />
+      <Hero
+        size={HERO_SIZE_SPLASH}
+        title={post.title}
+        backgroundImage={featuredImageUrl ?? undefined}
+        imageKey="blog"
+      />
 
       <div className="mx-auto max-w-3xl px-6 py-12 sm:px-8">
         <Breadcrumbs

@@ -7,15 +7,17 @@ export const metadata: Metadata = {
   description: 'Privacy Policy for EMINENT MEDIA LLC.',
 }
 
+const LAST_UPDATED = 'April 11, 2026'
+
 export default function PrivacyPage() {
   return (
     <>
-      <Hero variant="page" title="Privacy Policy" />
+      <Hero title="Privacy Policy">
+        <p className="mt-3 text-sm text-white/70 sm:text-base">Last updated: {LAST_UPDATED}</p>
+      </Hero>
 
       <div className="mx-auto max-w-3xl px-6 py-12 sm:px-8">
         <div className="prose prose-invert prose-sm max-w-none sm:prose-base">
-          <p className="text-sm text-muted-foreground">Last updated: April 11, 2026</p>
-
           <h2>Introduction</h2>
           <p>
             This Privacy Policy describes how EMINENT MEDIA LLC (&quot;we,&quot; &quot;our,&quot; or

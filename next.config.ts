@@ -1,4 +1,13 @@
+import { initOpenNextCloudflareForDev } from '@opennextjs/cloudflare'
 import { withPayload } from '@payloadcms/next/withPayload'
+
+// Initialize Wrangler bindings once for `next dev` (cached on globalThis).
+// Use local D1/R2 in dev — wrangler.jsonc sets D1 `remote: true` for deploy,
+// but remote proxy requires a live Cloudflare API session at startup.
+initOpenNextCloudflareForDev({
+  environment: process.env.CLOUDFLARE_ENV,
+  remoteBindings: false,
+})
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {

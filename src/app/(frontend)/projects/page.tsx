@@ -4,6 +4,7 @@ import { getPayload } from 'payload'
 import config from '@payload-config'
 import Link from 'next/link'
 import { Hero } from '@/components/Hero'
+import { HERO_SIZE_SPLASH } from '@/components/hero-layout'
 import { ContentLayout } from '@/components/ContentLayout'
 import { CategorySidebar } from '@/components/CategorySidebar'
 import { ProjectCard } from '@/components/ProjectCard'
@@ -49,7 +50,7 @@ export default async function ProjectsIndexPage({ searchParams }: PageProps) {
 
   return (
     <>
-      <Hero variant="page" title="Projects" imageKey="projects" />
+      <Hero size={HERO_SIZE_SPLASH} title="Projects" imageKey="projects" />
 
       <ContentLayout sidebar={<CategorySidebar categories={categories.docs} basePath="/projects" />}>
         {projects.length === 0 ? (

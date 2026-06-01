@@ -83,7 +83,7 @@ export default async function ProjectTagPage({ params, searchParams }: PageProps
 
   return (
     <>
-      <Hero variant="page" title={`#${tag.name}`} imageKey="projects" />
+      <Hero title={`#${tag.name}`} imageKey="projects" />
 
       <div className="mx-auto max-w-5xl px-6 pt-4 sm:px-8">
         <Breadcrumbs
