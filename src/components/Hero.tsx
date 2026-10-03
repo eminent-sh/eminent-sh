@@ -37,10 +37,10 @@ function HeroBackground() {
 type HeroVariant = 'home' | 'page'
 
 const HERO_IMAGES = {
-  home: 'https://media.eminent.sh/home-hero.jpg',
-  contact: 'https://media.eminent.sh/contact-hero.jpg',
-  blog: 'https://media.eminent.sh/blog-hero.jpg',
-  projects: 'https://media.eminent.sh/projects-hero.jpg',
+  home: '/home-hero.jpg',
+  contact: '/contact-hero.jpg',
+  blog: '/blog-hero.jpg',
+  projects: '/projects-hero.jpg',
 } as const
 
 const heroInnerTallClassName =

@@ -60,7 +60,7 @@ export function Header() {
                     <Link href="/" className={`block transition-transform duration-300 ease-out ${scrolled ? 'scale-[0.92]' : 'scale-100'}`}>
                         <Image
                             className="p-2"
-                            src="https://media.eminent.sh/logo-text-white-transparent.webp"
+                            src="/logo-text-white-transparent.webp"
                             alt="Logo"
                             width={128}
                             height={32}

@@ -8,8 +8,8 @@ export const metadata = {
   description: 'The index of ventures by EMINENT MEDIA LLC.',
   title: 'Bespoke Solutions by EMINENT',
   icons: {
-    icon: 'https://media.eminent.sh/favicon.ico',
-    apple: 'https://media.eminent.sh/apple-touch-icon.png',
+    icon: '/favicon.ico',
+    apple: '/apple-touch-icon.png',
   },
 }
 

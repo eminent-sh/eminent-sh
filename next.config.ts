@@ -11,15 +11,9 @@ initOpenNextCloudflareForDev({
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  images: {
-    remotePatterns: [
-      {
-        protocol: 'https' as const,
-        hostname: 'media.eminent.sh',
-        pathname: '/**',
-      },
-    ],
-  },
+  // Site-chrome images (heroes, logo, icons) are served from `public/`;
+  // CMS uploads are served same-origin via `/api/media/file`, so no remote
+  // image patterns are required.
   // Packages with Cloudflare Workers (workerd) specific code
   // Read more: https://opennext.js.org/cloudflare/howtos/workerd
   serverExternalPackages: ['jose', 'pg-cloudflare'],

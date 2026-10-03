@@ -28,6 +28,9 @@
 
 # debug
 npm-debug.log*
+
+# session cases (local working notes, not versioned)
+/.cases/
 yarn-debug.log*
 yarn-error.log*
 
