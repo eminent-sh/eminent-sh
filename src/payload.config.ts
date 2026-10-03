@@ -27,6 +27,11 @@ const realpath = (value: string) => (fs.existsSync(value) ? fs.realpathSync(valu
 
 const isCLI = process.argv.some((value) => realpath(value).endsWith(path.join('payload', 'bin.js')))
 const isProduction = process.env.NODE_ENV === 'production'
+// `next build` prerenders API routes by importing this config. Remote bindings
+// require a live Cloudflare API session, which build containers (Cloudflare
+// Builds, CI, fresh checkouts) don't have — so resolve local bindings here and
+// let real runtimes/CLI keep their existing behavior.
+const isBuildPhase = process.env.NEXT_PHASE === 'phase-production-build'
 
 const createLog =
   (level: string, fn: typeof console.log) => (objOrMsg: object | string, msg?: string) => {
@@ -66,9 +71,9 @@ async function resolveCloudflareContext(): Promise<CloudflareContext> {
   if (!cloudflareContextPromise) {
     cloudflareContextPromise = (async () => {
       const context =
-        isProduction && !isCLI
+        isProduction && !isCLI && !isBuildPhase
           ? await getCloudflareContext({ async: true })
-          : await getCloudflareContextFromWrangler()
+          : await getCloudflareContextFromWrangler(!isBuildPhase && isProduction)
 
       global[cloudflareContextSymbol] = context
       return context
@@ -163,12 +168,12 @@ export default buildConfig({
 })
 
 // Adapted from https://github.com/opennextjs/opennextjs-cloudflare/blob/d00b3a13e42e65aad76fba41774815726422cc39/packages/cloudflare/src/api/cloudflare-context.ts#L328C36-L328C46
-function getCloudflareContextFromWrangler(): Promise<CloudflareContext> {
+function getCloudflareContextFromWrangler(remote: boolean): Promise<CloudflareContext> {
   return import(/* webpackIgnore: true */ `${'__wrangler'.replaceAll('_', '')}`).then(
     ({ getPlatformProxy }) =>
       getPlatformProxy({
         environment: process.env.CLOUDFLARE_ENV,
-        remoteBindings: isProduction,
+        remoteBindings: remote,
       } satisfies GetPlatformProxyOptions),
   )
 }

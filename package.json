@@ -5,7 +5,7 @@
   "license": "MIT",
   "type": "module",
   "scripts": {
-    "build": "cross-env NODE_OPTIONS=\"--no-deprecation --max-old-space-size=8000\" next build",
+    "build": "payload migrate && cross-env NODE_OPTIONS=\"--no-deprecation --max-old-space-size=8000\" next build",
     "deploy": "npm run deploy:database && npm run deploy:app",
     "stage": "npm run deploy:database && npm run deploy:upload",
     "deploy:app": "opennextjs-cloudflare build --env=$CLOUDFLARE_ENV && opennextjs-cloudflare deploy --env=$CLOUDFLARE_ENV",
