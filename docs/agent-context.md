@@ -235,3 +235,23 @@ does not imply execution. The last context review was documentation-only.
   record only for meaningful new evidence and preserve the original session pointer.
 - Bootstrap/maintenance session ID: `ses_f33c41112ffe1pGqDHjx7F8Tbl` (local OpenCode
   provenance, not a portable URL). Durable project understanding lives in these files.
+
+### 2026-10-03 — R2-to-public migration and Worker Previews adoption
+
+- Verified the `eminent-sh` R2 bucket holds exactly 15 objects; all now live in
+  `public/` with matching byte sizes, and Hero/Header/layout metadata plus
+  `featured-image.ts` serve them locally. `next.config.ts` remote image patterns
+  removed. New CMS uploads still target R2 via `/api/media/file`.
+- `payload.config.ts` resolves local (not remote) bindings when
+  `NEXT_PHASE=phase-production-build`; `npm run build` runs local
+  `payload migrate` first so prerendered queries hit a migrated schema. Runtime
+  and CLI binding behavior unchanged.
+- Adopted Worker Previews (one-time, irreversible): Wrangler ~4.61 → ~4.147,
+  `wrangler.jsonc` `previews` block binds staging D1/R2 `eminent-sh-preview`
+  (schema seeded 2026-10-03; re-seed after future schema changes), preview
+  `PAYLOAD_SECRET` in Previews base config, `npm run preview:deploy` wraps the
+  opennext build plus `wrangler preview`. Preview builds no longer touch
+  production D1/R2. First Preview created 2026-10-03.
+- Standing caveats: production `npm run deploy` still requires a remote-capable
+  session for `deploy:database`; Stripe preview secrets and the preview
+  `SITE_URL` variable are set outside the repo (Previews base config).
