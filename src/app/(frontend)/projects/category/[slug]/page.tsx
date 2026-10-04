@@ -83,7 +83,6 @@ export default async function ProjectCategoryPage({ params, searchParams }: Page
   return (
     <>
       <Hero
-        variant="page"
         title={`Projects / ${category.name}`}
         description={category.description ?? undefined}
         imageKey="projects"

@@ -1,6 +1,7 @@
 import React from 'react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 
 function HeroBackground() {
   return (
@@ -36,15 +37,23 @@ function HeroBackground() {
 type HeroVariant = 'home' | 'page'
 
 const HERO_IMAGES = {
-  home: 'https://media.eminent.sh/home-hero.jpg',
-  contact: 'https://media.eminent.sh/contact-hero.jpg',
-  blog: 'https://media.eminent.sh/blog-hero.jpg',
-  projects: 'https://media.eminent.sh/projects-hero.jpg',
+  home: '/home-hero.jpg',
+  contact: '/contact-hero.jpg',
+  blog: '/blog-hero.jpg',
+  projects: '/projects-hero.jpg',
 } as const
+
+const heroInnerTallClassName =
+  'relative mx-auto flex h-[50vh] max-w-4xl flex-col items-center justify-center px-6 py-20 text-center sm:px-8 md:py-28'
+
+const heroInnerCompactClassName =
+  'relative mx-auto flex max-w-4xl flex-col items-center px-6 py-12 text-center sm:px-8 sm:py-14'
 
 export interface HeroProps {
   variant?: HeroVariant
-  title?: string
+  /** Short heading band for filter and legal pages */
+  size?: 'compact'
+  title?: React.ReactNode
   description?: string
   children?: React.ReactNode
   backgroundImage?: string
@@ -53,6 +62,7 @@ export interface HeroProps {
 
 export function Hero({
   variant = 'page',
+  size,
   title,
   description,
   children,
@@ -60,10 +70,18 @@ export function Hero({
   imageKey,
 }: HeroProps) {
   const isHome = variant === 'home'
-  const backgroundImage = imageKey ? HERO_IMAGES[imageKey] : backgroundImageProp
+  const isCompact = size === 'compact'
+  const isTall = isHome || !isCompact
+  const backgroundImage =
+    backgroundImageProp ?? (imageKey ? HERO_IMAGES[imageKey] : undefined)
 
   return (
-    <section className="relative -mt-20 h-[calc(5rem+50vh)] w-full bg-black pt-20 text-white">
+    <section
+      className={cn(
+        'relative -mt-20 w-full bg-black pt-20 text-white',
+        isTall ? 'h-[calc(5rem+50vh)]' : 'min-h-0',
+      )}
+    >
       {backgroundImage && (
         <>
           <div
@@ -82,14 +100,15 @@ export function Hero({
         </>
       )}
       <HeroBackground />
-      <div className="relative mx-auto flex h-[50vh] max-w-4xl flex-col items-center justify-center px-6 py-20 text-center sm:px-8 md:py-28">
+      <div className={isTall ? heroInnerTallClassName : heroInnerCompactClassName}>
         {isHome ? (
           <>
             <Link
               href="/contact"
-              className="mb-6 inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/5 px-4 py-2 text-sm text-white hover:bg-white/10 hover:border-white/30"
+              className="mb-6 inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/5 px-4 py-2 text-sm text-white hover:border-white/30 hover:bg-white/10"
             >
-              Need a technical consultation? <span className="font-semibold">Get in touch →</span>
+              Need a technical consultation?{' '}
+              <span className="font-semibold">Get in touch →</span>
             </Link>
             <h1 className="text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl lg:text-7xl">
               Bespoke Solutions for
@@ -109,15 +128,18 @@ export function Hero({
           </>
         ) : (
           <>
-            {title && (
-              <h1 className="text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl">
-                {title}
-              </h1>
-            )}
+            {title &&
+              (typeof title === 'string' ? (
+                <h1 className="text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl">
+                  {title}
+                </h1>
+              ) : (
+                <div className="text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl">
+                  {title}
+                </div>
+              ))}
             {description && (
-              <p className="mt-4 max-w-2xl text-lg text-white/85 sm:text-xl">
-                {description}
-              </p>
+              <p className="mt-4 max-w-2xl text-lg text-white/85 sm:text-xl">{description}</p>
             )}
             {children}
           </>

@@ -19,6 +19,11 @@ const clientLinks = [
 
 const SCROLL_THRESHOLD = 0
 
+const navLinkClass = (scrolled: boolean) =>
+  `${navigationMenuTriggerStyle()} transition-[font-size,padding,background-color] duration-300 !bg-transparent hover:!bg-white/10 focus:!bg-white/10 focus-visible:!bg-white/10 data-[state=open]:!bg-white/10${
+    scrolled ? ' text-[0.9375rem] py-1.5' : ''
+  }`
+
 export function Header() {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
     const [scrolled, setScrolled] = useState(false)
@@ -55,7 +60,7 @@ export function Header() {
                     <Link href="/" className={`block transition-transform duration-300 ease-out ${scrolled ? 'scale-[0.92]' : 'scale-100'}`}>
                         <Image
                             className="p-2"
-                            src="https://media.eminent.sh/logo-text-white-transparent.webp"
+                            src="/logo-text-white-transparent.webp"
                             alt="Logo"
                             width={128}
                             height={32}
@@ -69,9 +74,7 @@ export function Header() {
                             <NavigationMenuItem key={href}>
                                 <NavigationMenuLink
                                     asChild
-                                    className={`${navigationMenuTriggerStyle()} transition-[font-size,padding,background-color] duration-300 ${
-                                        scrolled ? 'text-[0.9375rem] py-1.5' : '!bg-transparent hover:!bg-white/10 focus:!bg-white/10 focus-visible:!bg-white/10 data-[state=open]:!bg-white/10'
-                                    }`}
+                                    className={navLinkClass(scrolled)}
                                 >
                                     <Link href={href}>{label}</Link>
                                 </NavigationMenuLink>
@@ -85,9 +88,7 @@ export function Header() {
                         <Link
                             key={href}
                             href={href}
-                            className={`${navigationMenuTriggerStyle()} transition-[font-size,padding,background-color] duration-300 ${
-                                scrolled ? 'text-[0.9375rem] py-1.5' : '!bg-transparent hover:!bg-white/10 focus:!bg-white/10 focus-visible:!bg-white/10'
-                            }`}
+                            className={navLinkClass(scrolled)}
                         >
                             {label}
                         </Link>

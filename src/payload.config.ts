@@ -12,10 +12,7 @@ import { formBuilderPlugin } from '@payloadcms/plugin-form-builder'
 import { redirectsPlugin } from '@payloadcms/plugin-redirects'
 import { mcpPlugin } from '@payloadcms/plugin-mcp'
 import { stripePlugin } from '@payloadcms/plugin-stripe'
-import { multiTenantPlugin } from '@payloadcms/plugin-multi-tenant'
 import { searchPlugin } from '@payloadcms/plugin-search'
-
-import type { Config } from '@/payload-types'
 
 import { Users } from './collections/Users'
 import { Media } from './collections/Media'
@@ -23,7 +20,6 @@ import { Posts } from './collections/Posts'
 import { Categories } from './collections/Categories'
 import { Tags } from './collections/Tags'
 import { Projects } from './collections/Projects'
-import { Tenants } from './collections/Tenants'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -31,6 +27,11 @@ const realpath = (value: string) => (fs.existsSync(value) ? fs.realpathSync(valu
 
 const isCLI = process.argv.some((value) => realpath(value).endsWith(path.join('payload', 'bin.js')))
 const isProduction = process.env.NODE_ENV === 'production'
+// `next build` prerenders API routes by importing this config. Remote bindings
+// require a live Cloudflare API session, which build containers (Cloudflare
+// Builds, CI, fresh checkouts) don't have — so resolve local bindings here and
+// let real runtimes/CLI keep their existing behavior.
+const isBuildPhase = process.env.NEXT_PHASE === 'phase-production-build'
 
 const createLog =
   (level: string, fn: typeof console.log) => (objOrMsg: object | string, msg?: string) => {
@@ -52,10 +53,37 @@ const cloudflareLogger = {
   silent: () => {},
 } as any // Use PayloadLogger type when it's exported
 
-const cloudflare =
-  isCLI || !isProduction
-    ? await getCloudflareContextFromWrangler()
-    : await getCloudflareContext({ async: true })
+const cloudflareContextSymbol = Symbol.for('__cloudflare-context__')
+
+type GlobalWithCloudflareContext = typeof globalThis & {
+  [cloudflareContextSymbol]?: CloudflareContext
+}
+
+let cloudflareContextPromise: Promise<CloudflareContext> | undefined
+
+async function resolveCloudflareContext(): Promise<CloudflareContext> {
+  const global = globalThis as GlobalWithCloudflareContext
+  const cached = global[cloudflareContextSymbol]
+  if (cached) {
+    return cached
+  }
+
+  if (!cloudflareContextPromise) {
+    cloudflareContextPromise = (async () => {
+      const context =
+        isProduction && !isCLI && !isBuildPhase
+          ? await getCloudflareContext({ async: true })
+          : await getCloudflareContextFromWrangler(!isBuildPhase && isProduction)
+
+      global[cloudflareContextSymbol] = context
+      return context
+    })()
+  }
+
+  return cloudflareContextPromise
+}
+
+const cloudflare = await resolveCloudflareContext()
 
 export default buildConfig({
   admin: {
@@ -64,14 +92,14 @@ export default buildConfig({
       baseDir: path.resolve(dirname),
     },
   },
-  collections: [Users, Tenants, Media, Posts, Projects, Categories, Tags],
+  collections: [Users, Media, Posts, Projects, Categories, Tags],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',
   typescript: {
     outputFile: path.resolve(dirname, 'payload-types.ts'),
   },
   db: sqliteD1Adapter({ binding: cloudflare.env.D1 }),
-  logger: isProduction ? cloudflareLogger : undefined,
+  logger: cloudflareLogger,
   plugins: [
     r2Storage({
       bucket: cloudflare.env.R2,
@@ -116,23 +144,14 @@ export default buildConfig({
       collections: {
         posts: { enabled: true },
         projects: { enabled: true },
-        categories: { enabled: { find: true } },
-        tags: { enabled: { find: true } },
-        media: { enabled: { find: true } },
+        categories: { enabled: { find: true, create: true } },
+        tags: { enabled: { find: true, create: true } },
+        media: { enabled: { find: true, create: true } },
       },
     }),
     stripePlugin({
       stripeSecretKey: process.env.STRIPE_SECRET_KEY || '',
       stripeWebhooksEndpointSecret: process.env.STRIPE_WEBHOOKS_ENDPOINT_SECRET,
-    }),
-    multiTenantPlugin<Config>({
-      collections: {
-        media: {},
-        posts: {},
-        projects: {},
-        categories: {},
-        tags: {},
-      },
     }),
     searchPlugin({
       collections: ['posts', 'projects'],
@@ -149,12 +168,12 @@ export default buildConfig({
 })
 
 // Adapted from https://github.com/opennextjs/opennextjs-cloudflare/blob/d00b3a13e42e65aad76fba41774815726422cc39/packages/cloudflare/src/api/cloudflare-context.ts#L328C36-L328C46
-function getCloudflareContextFromWrangler(): Promise<CloudflareContext> {
+function getCloudflareContextFromWrangler(remote: boolean): Promise<CloudflareContext> {
   return import(/* webpackIgnore: true */ `${'__wrangler'.replaceAll('_', '')}`).then(
     ({ getPlatformProxy }) =>
       getPlatformProxy({
         environment: process.env.CLOUDFLARE_ENV,
-        remoteBindings: isProduction,
+        remoteBindings: remote,
       } satisfies GetPlatformProxyOptions),
   )
 }

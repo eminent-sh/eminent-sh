@@ -41,6 +41,19 @@
     //   "bucket_name": "<BUCKET_NAME>",
     // },
   ],
+  // Worker Previews (per-branch isolated environments). Preview bindings
+  // point at staging resources so preview builds never touch production D1/R2.
+  // Secrets live in the Previews base config (see .cases notes), not here.
+  "previews": {
+    "d1_databases": [
+      {
+        "binding": "D1",
+        "database_id": "d7d7474b-81f5-494e-b865-ba8f6c86848d",
+        "database_name": "eminent-sh-preview",
+      },
+    ],
+    "r2_buckets": [{ "binding": "R2", "bucket_name": "eminent-sh-preview" }],
+  },
 
   // Here's how to configure an additional environment
   // It can be deployed with `CLOUDFLARE_ENV=staging npm run deploy`

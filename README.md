@@ -1,119 +1,108 @@
-# Payload Cloudflare Template
+# EMINENT
 
-[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/payloadcms/payload/tree/main/templates/with-cloudflare-d1)
+Source for [eminent.sh](https://eminent.sh), EMINENT's portfolio, technical blog, and
+business website. Built from Payload's
+[Cloudflare D1 template](https://github.com/payloadcms/payload/tree/main/templates/with-cloudflare-d1).
 
-**This can only be deployed on Paid Workers right now due to size limits.** This template comes configured with the bare minimum to get started on anything you need.
+The app uses Next.js 15.4.11, React 19.2.1, and Payload 3.82.1. Deployment is configured
+for Cloudflare Workers through OpenNext, with D1/SQLite content storage and R2 uploads.
+Payload manages users, media, posts, projects, categories, and tags. Posts and projects
+support autosaved drafts; the current application is single-site.
 
-## Quick start
+## Local setup
 
-This template can be deployed directly to Cloudflare Workers by clicking the button to take you to the setup screen.
+Use npm and the checked-in `package-lock.json`. `.npmrc` enables `legacy-peer-deps`.
+Node 24 LTS is a recommended starting point: the older minimum in `package.json`
+does not cover the requirements of all locked development dependencies.
 
-From there you can connect your code to a git provider such Github or Gitlab, name your Workers, D1 Database and R2 Bucket as well as attach any additional environment variables or services you need.
-
-## Quick Start - local setup
-
-To spin up this template locally, follow these steps:
-
-### Clone
-
-After you click the `Deploy` button above, you'll want to have standalone copy of this repo on your machine. Cloudflare will connect your app to a git provider such as Github and you can access your code from there.
-
-### Local Development
-
-## How it works
-
-Out of the box, using [`Wrangler`](https://developers.cloudflare.com/workers/wrangler/) will automatically create local bindings for you to connect to the remote services and it can even create a local mock of the services you're using with Cloudflare.
-
-We've pre-configured Payload for you with the following:
-
-### Collections
-
-See the [Collections](https://payloadcms.com/docs/configuration/collections) docs for details on how to extend this functionality.
-
-- #### Users (Authentication)
-
-  Users are auth-enabled collections that have access to the admin panel.
-
-  For additional help, see the official [Auth Example](https://github.com/payloadcms/payload/tree/main/examples/auth) or the [Authentication](https://payloadcms.com/docs/authentication/overview#authentication-overview) docs.
-
-- #### Media
-
-  This is the uploads enabled collection.
-
-### Image Storage (R2)
-
-Images will be served from an R2 bucket which you can then further configure to use a CDN to serve for your frontend directly.
-
-### D1 Database
-
-The Worker will have direct access to a D1 SQLite database which Wrangler can connect locally to, just note that you won't have a connection string as you would typically with other providers.
-
-You can enable read replicas by adding `readReplicas: 'first-primary'` in the DB adapter and then enabling it on your D1 Cloudflare dashboard. Read more about this feature on [our docs](https://payloadcms.com/docs/database/sqlite#d1-read-replicas).
-
-## Working with Cloudflare
-
-Firstly, after installing dependencies locally you need to authenticate with Wrangler by running:
+Run from the repository root:
 
 ```bash
-npx wrangler login
+npm ci
+cp .env.example .env
+openssl rand -hex 32
 ```
 
-This will take you to Cloudflare to login and then you can use the Wrangler CLI locally for anything, use `npx wrangler help` to see all available options.
+Put the generated value in `.env` as `PAYLOAD_SECRET`, then review these settings:
 
-Wrangler is pretty smart so it will automatically bind your services for local development just by running `npm run dev`.
+| Variable | Use |
+| --- | --- |
+| `PAYLOAD_SECRET` | Payload authentication/encryption secret |
+| `SITE_URL` | Site origin for sitemap and SEO; use `http://localhost:3000` locally |
+| `ANALYTICS_ID` | Optional GA4 measurement ID |
+| `STRIPE_SECRET_KEY` | Required by the configured Stripe integration, as noted in `.env.example` |
+| `STRIPE_WEBHOOKS_ENDPOINT_SECRET` | Stripe webhook verification secret |
 
-## Deployments
-
-When you're ready to deploy, first make sure you have created your migrations:
+The Stripe plugin is configured unconditionally. A clean startup with only a Payload
+secret has not been verified in the latest context review. Keep credentials out of Git;
+production secrets belong in Cloudflare Secrets.
 
 ```bash
-npx payload migrate:create
+npm run dev
 ```
 
-Then run the following command:
+Open `http://localhost:3000` and `/admin` for the CMS. The Next dev configuration
+disables remote bindings and initializes local D1/R2 emulation automatically. Docker
+and a separate database server are not configured. Shared hero images and icons are
+served from `public/`.
 
-```bash
-npm run deploy
-```
+## Development and verification
 
-This will spin up Wrangler in `production` mode, run any created migrations, build the app and then deploy the bundle up to Cloudflare.
+| Command | Purpose |
+| --- | --- |
+| `npm run devsafe` | Clear Next/OpenNext build output and start development |
+| `npx tsc --noEmit` | Check TypeScript |
+| `npm run lint` | Run the configured Next/ESLint checks |
+| `npm run test:int` | Run Vitest integration tests using the Payload config |
+| `npm run test:e2e` | Run Playwright Chromium tests; starts or reuses the dev server |
+| `npm run build` | Build Next.js; Worker packaging is a separate OpenNext step |
+| `npm run generate:types` | Regenerate Cloudflare and Payload declarations |
+| `npm run generate:importmap` | Regenerate the Payload admin component map |
 
-That's it! You can if you wish move these steps into your CI pipeline as well.
+Install the browser with `npx playwright install chromium` if needed. Admin E2E tests
+create/delete a fixture user; run them against local development data. The frontend
+spec still asserts starter-template content. Historical integration/admin failures and
+the actual checks performed are recorded in
+[verification context](docs/agent-context.md#verification).
 
-## Enabling logs
+For implementation guidance and the complete command map, read [AGENTS.md](AGENTS.md).
+The [project context](docs/agent-context.md) explains content flow, configuration,
+known source discrepancies, and maintenance provenance.
 
-By default logs are not enabled for your API, we've made this decision because it does run against your quota so we've left it opt-in. But you can easily enable logs in one click in the Cloudflare panel, [see docs](https://developers.cloudflare.com/workers/observability/logs/workers-logs/#enable-workers-logs).
+## Deployment
 
-### Logger Configuration
+`wrangler.jsonc` targets the `eminent-sh` Worker, D1 database, and R2 bucket.
+Authenticate the appropriate EMINENT Cloudflare account for remote operations
+(`npx wrangler login` for interactive Wrangler authentication).
 
-This template includes a custom console-based logger compatible with Cloudflare Workers. Payload's default logger uses `pino-pretty`, which relies on Node.js APIs not available in Workers and would cause `fs.write is not implemented` errors.
+Review schema changes and generate any required migration with
+`npx payload migrate:create` before deployment. Database-altering operations and
+infrastructure changes follow the review boundaries in [AGENTS.md](AGENTS.md#agent-behavior).
 
-The custom logger in `payload.config.ts`:
+- `npm run deploy`: run database migrations and remote D1 optimization, then build
+  and deploy the Worker. Agents require explicit user confirmation.
+- `npm run stage`: run **the same database step**, then build and upload a Worker
+  version. This command does not provide an isolated staging database.
+- `npm run preview`: build with OpenNext, then run the Worker preview. Review binding
+  selection before treating this as a local-only operation.
 
-- Routes logs through `console.*` methods which Workers handles correctly
-- Outputs JSON-formatted logs for Cloudflare observability
-- Only active in production (development uses the default `pino-pretty` for better DX)
+`CLOUDFLARE_ENV` selects an existing Wrangler environment. The checked-in staging
+configuration is only a commented example; no separate staging environment is defined.
+Branch-to-deployment automation and the current live migration state are unverified.
+See [deployment context](docs/agent-context.md#deployment-and-persistence) before operating.
 
-You can control the log level via the `PAYLOAD_LOG_LEVEL` environment variable (e.g., `debug`, `info`, `warn`, `error`).
+## Runtime notes
 
-### Diagnostic Channel Errors
-
-If you see "Failed to publish diagnostic channel message" errors in your observability logs, these typically come from the `undici` HTTP client library. The template includes `skipSafeFetch: true` in the Media collection to use native fetch instead of undici for file uploads, which helps reduce these errors.
-
-Cloudflare Workers runs in an [isolated environment that cannot access private IP ranges](https://developers.cloudflare.com/workers-vpc/examples/route-across-private-services/) by default, providing built-in SSRF protection. This makes `skipSafeFetch` safe to use.
-
-## Known issues
-
-### GraphQL
-
-We are currently waiting on some issues with GraphQL to be [fixed upstream in Workers](https://github.com/cloudflare/workerd/issues/5175) so full support for GraphQL is not currently guaranteed when deployed.
-
-### Worker size limits
-
-We currently recommend deploying this template to the Paid Workers plan due to bundle [size limits](https://developers.cloudflare.com/workers/platform/limits/#worker-size) of 3mb. We're actively trying to reduce our bundle footprint over time to better meet this metric.
-
-This also applies to your own code, in the case of importing a lot of libraries you may find yourself limited by the bundle.
-
-## Questions
-
-If you have any issues or questions, reach out to us on [Discord](https://discord.com/invite/payload) or start a [GitHub discussion](https://github.com/payloadcms/payload/discussions).
+- `src/payload.config.ts` installs a JSON console logger in all environments. The prior
+  template notes explain its purpose as avoiding Workers-incompatible `pino-pretty`
+  behavior. `PAYLOAD_LOG_LEVEL` sets its `level` property; its custom methods directly
+  call `console.*`, so do not assume they implement level filtering.
+- Worker log collection is configured externally; check the
+  [Cloudflare observability documentation](https://developers.cloudflare.com/workers/observability/logs/workers-logs/).
+- Media disables cropping/focal-point processing because of Workers image-processing
+  constraints. `skipSafeFetch` is not configured in the current Media collection.
+- The starter documentation recommended a paid Worker plan for bundle size and noted
+  a [GraphQL/workerd issue](https://github.com/cloudflare/workerd/issues/5175). Treat
+  those as historical notes: verify the current runtime and
+  [plan-specific bundle limits](https://developers.cloudflare.com/workers/platform/limits/#worker-size)
+  when deploying or expanding dependencies.
